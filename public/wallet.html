@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet - WalletConnect Waku</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .wallet-info {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .request-item {
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #f8f9fa;
+        }
+        .request-header h3 {
+            margin: 0 0 10px 0;
+            color: #007bff;
+        }
+        .request-details {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .request-actions {
+            margin-top: 15px;
+        }
+        .request-actions button {
+            padding: 8px 16px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .approve-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        .reject-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        .approve-btn:hover {
+            background-color: #218838;
+        }
+        .reject-btn:hover {
+            background-color: #c82333;
+        }
+        .no-requests {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Wallet Interface</h1>
+    
+    <div class="wallet-info">
+        <h3>Wallet Information</h3>
+        <p><strong>Address:</strong> <span id="wallet-address">Loading...</span></p>
+        <p><strong>Balance:</strong> <span id="wallet-balance">Loading...</span></p>
+    </div>
+
+    <div>
+        <h3>Pending Requests</h3>
+        <div id="requests-container">
+            <div class="no-requests">No pending requests</div>
+        </div>
+    </div>
+
+    <script src="./wapp-bundle.js"></script>
+    <script>
+        let wallet;
+        
+        async function initializeWallet() {
+            // 检查是否有错误信息
+            if (window.wallet === undefined) {
+                console.error('window.wallet is undefined - bundle may have failed to load');
+            }
+
+            const Wallet = window.wapp;
+            wallet = new Wallet();
+            await wallet.initialize();
+            
+            // 更新钱包信息
+            document.getElementById('wallet-address').textContent = wallet.getAddress();
+            document.getElementById('wallet-balance').textContent = wallet.getBalance();
+            
+            console.log('Wallet initialized');
+        }
+        // 全局函数供 HTML 调用
+        window.wallet = {
+            approveSession: (requestId) => wallet.approveSession(requestId),
+            rejectSession: (requestId) => wallet.rejectSession(requestId),
+            approveSign: (requestId) => wallet.approveSign(requestId),
+            rejectSign: (requestId) => wallet.rejectSign(requestId)
+        };
+        
+        // 初始化
+        initializeWallet().catch(console.error);
+    </script>
+</body>
+</html>
