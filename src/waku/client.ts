@@ -1,36 +1,54 @@
-import { createLightNode, LightNode, Protocols, createDecoder, createEncoder } from '@waku/sdk';
+import { createLightNode, LightNode, createDecoder, createEncoder, waitForRemotePeer, Protocols } from '@waku/sdk';
 import { WakuMessage } from '../types';
 
 export class WakuClient {
   private node: LightNode | null = null;
-  private pubsubTopic = '/waku/2/rs/5432/0';
+  private clusterId = 5432;
+  private pubsubTopic = `/waku/2/rs/${this.clusterId}/0`;
   private topic = '/walletconnect/1/session/proto';
   private messageHandlers: Map<string, (message: WakuMessage) => void> = new Map();
 
   async start(wakuNodes?: string[]): Promise<void> {
     console.log('Starting Waku client...');
 
-    const customNodes = wakuNodes || [
-      `/ip4/159.138.36.164/tcp/60001/ws/p2p/16Uiu2HAkyt6wQkYk2EZPWsrot8aktLwya1UixWTstjGFrW4B63b5`
-    ];
+    const customNodes = wakuNodes || [];
 
     console.log('Connecting to nodes:', customNodes)
 
     this.node = await createLightNode({
-      defaultBootstrap: false, // 禁用默认节点
-      networkConfig: { clusterId: 5432, numShardsInCluster: 0 },
+      networkConfig: { clusterId: this.clusterId },
+      bootstrapPeers: customNodes,
       numPeersToUse: 1,
-      bootstrapPeers: customNodes // 使用自定义节点
+      libp2p: {
+        filterMultiaddrs: false,
+        hideWebSocketInfo: true,
+      },
     });
 
+    this.node.events.addEventListener("waku:connection", (event) => {
+      console.log('connnect event');
+      console.log(event.detail); // true if connected, false if disconnected
+    });
+
+    this.node.events.addEventListener("waku:health", (event) => {
+      console.log('health event');
+      console.log(event.detail); // 'Unhealthy', 'MinimallyHealthy', or 'SufficientlyHealthy'
+    });
+
+    console.log(this.node.peerId);
+    // const promises = customNodes.map((multiaddr) => (this.node as LightNode).dial(multiaddr));
+    // await Promise.all(promises);
+
     await this.node.start();
+    console.log(`Node connected=${this.node.isConnected()}`)
 
-    console.log('Node started, waiting for peers...');
-    // await waitForRemotePeer(this.node, [Protocols.Filter, Protocols.LightPush], 5000);
+    console.log(`Node started=${this.node.isStarted()}, waiting for peers...`);
+    await this.node.waitForPeers([Protocols.LightPush, Protocols.Filter], 1000);
 
+    console.log(`Node connected=${this.node.isConnected()}`)
     // 使用正确的 decoder
     const decoder = createDecoder(this.topic, {
-      clusterId: 5432,
+      clusterId: this.clusterId,
       shardId: 0,
       pubsubTopic: this.pubsubTopic
     });
@@ -60,7 +78,7 @@ export class WakuClient {
     const payload = new TextEncoder().encode(JSON.stringify(message));
     const encoder = createEncoder({
       contentTopic: this.topic, routingInfo: {
-        clusterId: 5432,
+        clusterId: this.clusterId,
         shardId: 0,
         pubsubTopic: this.pubsubTopic
       }

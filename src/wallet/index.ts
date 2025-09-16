@@ -23,8 +23,6 @@ export class Wallet {
   async initialize(): Promise<void> {
     try {
       await this.wakuClient.start([
-        '/ip4/119.8.189.233/tcp/60000/p2p/16Uiu2HAmBHfZJ4kiF5r9Bc8TTaYcdGbws2r5ftMgKzKhnssUHNr2',
-        // '/ip4/119.8.189.233/tcp/60001/ws/p2p/16Uiu2HAmBHfZJ4kiF5r9Bc8TTaYcdGbws2r5ftMgKzKhnssUHNr2',
       ]);
     } catch (err) {
       console.error('Fail to start waku for wallet', err)

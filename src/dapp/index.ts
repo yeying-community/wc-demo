@@ -18,8 +18,6 @@ export class DApp {
   async initialize(): Promise<void> {
     try {
       await this.wakuClient.start([
-        '/ip4/159.138.36.164/tcp/60000/p2p/16Uiu2HAkyt6wQkYk2EZPWsrot8aktLwya1UixWTstjGFrW4B63b5',
-        // '/ip4/159.138.36.164/tcp/60001/ws/p2p/16Uiu2HAkyt6wQkYk2EZPWsrot8aktLwya1UixWTstjGFrW4B63b5',
       ]);
     } catch (err) {
       console.error('Fail to start waku for dapp', err)
