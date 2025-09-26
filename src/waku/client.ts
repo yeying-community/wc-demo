@@ -1,59 +1,57 @@
-import { createLightNode, LightNode, createDecoder, createEncoder, waitForRemotePeer, Protocols } from '@waku/sdk';
+import { createLightNode, LightNode, createDecoder, createEncoder, Protocols } from '@waku/sdk';
 import { WakuMessage } from '../types';
+import { yamux } from '@chainsafe/libp2p-yamux';
 
 export class WakuClient {
   private node: LightNode | null = null;
-  private clusterId = 5432;
-  private pubsubTopic = `/waku/2/rs/${this.clusterId}/0`;
-  private topic = '/walletconnect/1/session/proto';
+  private clusterId: number;
+  private pubsubTopic: string;
+  private contentTopic = '/walletconnect/1/session/proto';
   private messageHandlers: Map<string, (message: WakuMessage) => void> = new Map();
 
-  async start(wakuNodes?: string[]): Promise<void> {
+  constructor(clusterId: number = 5432) {
+    this.clusterId = clusterId
+    this.pubsubTopic = `/waku/2/rs/${this.clusterId}/0`;
+  }
+
+  async start(wakuNodes: string[]): Promise<void> {
     console.log('Starting Waku client...');
 
-    const customNodes = wakuNodes || [];
-
-    console.log('Connecting to nodes:', customNodes)
-
+    console.log('Connecting to nodes:', wakuNodes)
     this.node = await createLightNode({
-      networkConfig: { clusterId: this.clusterId },
-      bootstrapPeers: customNodes,
+      networkConfig: {
+        clusterId: this.clusterId,
+      },
+      defaultBootstrap: false,
+      autoStart: true,
+      bootstrapPeers: wakuNodes,
       numPeersToUse: 1,
       libp2p: {
+        // 明确指定流多路复用器
+        streamMuxers: [yamux()],
         filterMultiaddrs: false,
         hideWebSocketInfo: true,
+        connectionManager: {
+          dialTimeout: 5000, // 增加拨号超时
+          maxConnections: 10,
+        }
       },
     });
 
-    this.node.events.addEventListener("waku:connection", (event) => {
-      console.log('connnect event');
-      console.log(event.detail); // true if connected, false if disconnected
-    });
-
-    this.node.events.addEventListener("waku:health", (event) => {
-      console.log('health event');
-      console.log(event.detail); // 'Unhealthy', 'MinimallyHealthy', or 'SufficientlyHealthy'
-    });
-
-    console.log(this.node.peerId);
-    // const promises = customNodes.map((multiaddr) => (this.node as LightNode).dial(multiaddr));
-    // await Promise.all(promises);
-
-    await this.node.start();
-    console.log(`Node connected=${this.node.isConnected()}`)
+    console.log(`Local peerId=${this.node.peerId}`)
 
     console.log(`Node started=${this.node.isStarted()}, waiting for peers...`);
-    await this.node.waitForPeers([Protocols.LightPush, Protocols.Filter], 1000);
+    await this.node.waitForPeers([Protocols.LightPush, Protocols.Filter], 5000);
 
     console.log(`Node connected=${this.node.isConnected()}`)
-    // 使用正确的 decoder
-    const decoder = createDecoder(this.topic, {
+
+    const decoder = createDecoder(this.contentTopic, {
       clusterId: this.clusterId,
       shardId: 0,
       pubsubTopic: this.pubsubTopic
     });
 
-    await this.node.filter.subscribe(
+    const success = await this.node.filter.subscribe(
       [decoder],
       (wakuMessage) => {
         try {
@@ -67,6 +65,10 @@ export class WakuClient {
       }
     );
 
+    console.log(`Subscribe content topic=${this.contentTopic}, clusterId=${this.clusterId}, pubsubTopic=${this.pubsubTopic}, success=${success} `)
+    if (!success) {
+      console.error("Failed to subscribe");
+    }
     console.log('Waku client started successfully');
   }
 
@@ -77,7 +79,7 @@ export class WakuClient {
 
     const payload = new TextEncoder().encode(JSON.stringify(message));
     const encoder = createEncoder({
-      contentTopic: this.topic, routingInfo: {
+      contentTopic: this.contentTopic, routingInfo: {
         clusterId: this.clusterId,
         shardId: 0,
         pubsubTopic: this.pubsubTopic
@@ -88,7 +90,7 @@ export class WakuClient {
       payload,
       timestamp: new Date()
     });
-    console.log('Message published:', message.type, 'Success:', result.successes.length > 0);
+    console.log('Message published:', message.type, 'Success:', result.successes.length > 0, "error:", result.failures);
   }
 
   onMessage(type: string, handler: (message: WakuMessage) => void): void {

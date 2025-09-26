@@ -13,7 +13,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@waku/sdk": "^0.0.34",
+    "@chainsafe/libp2p-yamux": "^7.0.4",
+    "@waku/sdk": "^0.0.35",
     "ethers": "^6.8.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
