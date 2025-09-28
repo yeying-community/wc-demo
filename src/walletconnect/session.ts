@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Session, SessionRequest, AppMetadata, Namespace } from '../types';
+import { Session, SessionRequest, AppMetadata, Namespace, SignRequest } from '../types';
 
 export class SessionManager {
   private sessions: Map<string, Session> = new Map();
-  private pendingRequests: Map<string, SessionRequest> = new Map();
+  private pendingRequests: Map<string, SessionRequest | SignRequest> = new Map();
 
   createSessionRequest(metadata: AppMetadata): SessionRequest {
     const id = uuidv4();
@@ -24,14 +24,23 @@ export class SessionManager {
       },
       metadata
     };
-    this.pendingRequests.set(id, request);
+
+    this.setRequest(request)
     return request;
   }
 
+  setRequest(request: SessionRequest | SignRequest) {
+    this.pendingRequests.set(request.id, request);
+  }
+
+  delRequest(requestId: string) {
+    this.pendingRequests.delete(requestId);
+  }
+
   approveSession(requestId: string, accounts: string[]): Session {
-    const request = this.pendingRequests.get(requestId);
+    const request = this.pendingRequests.get(requestId) as SessionRequest;
     if (!request) {
-      throw new Error('Session request not found');
+      throw new Error('Session request not found when approving');
     }
 
     const session: Session = {
@@ -53,13 +62,31 @@ export class SessionManager {
     };
 
     this.sessions.set(session.id, session);
-    this.pendingRequests.delete(requestId);
-    
     return session;
   }
 
-  rejectSession(requestId: string): void {
-    this.pendingRequests.delete(requestId);
+  rejectSession(requestId: string): SessionRequest {
+    const request = this.pendingRequests.get(requestId) as SessionRequest;
+    if (!request) {
+      throw new Error('Session request not found when rejecting');
+    }
+    return request
+  }
+
+  approveSign(requestId: string): SignRequest {
+    const request = this.pendingRequests.get(requestId) as SignRequest;
+    if (!request) {
+      throw new Error('Sign request not found when approving');
+    }
+    return request
+  }
+
+    rejectSign(requestId: string): SignRequest {
+    const request = this.pendingRequests.get(requestId) as SignRequest;
+    if (!request) {
+      throw new Error('Sign request not found when rejecting');
+    }
+    return request
   }
 
   getSession(sessionId: string): Session | undefined {

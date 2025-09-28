@@ -10,7 +10,6 @@ export class Wallet {
   private sessionManager: SessionManager;
   private jwtManager: JWTManager;
   private wallet: ethers.Wallet;
-  private pendingRequests: Map<string, any> = new Map();
 
   constructor() {
     this.wakuClient = new WakuClient();
@@ -54,12 +53,12 @@ export class Wallet {
   }
 
   private handleSessionRequest(request: SessionRequest): void {
-    this.pendingRequests.set(request.id, request);
+    this.sessionManager.setRequest(request);
     this.displaySessionRequest(request);
   }
 
   private handleSignRequest(request: SignRequest): void {
-    this.pendingRequests.set(request.id, request);
+    this.sessionManager.setRequest(request);
     this.displaySignRequest(request);
   }
 
@@ -114,14 +113,11 @@ export class Wallet {
   }
 
   async approveSession(requestId: string): Promise<void> {
-    const request = this.pendingRequests.get(requestId) as SessionRequest;
-    if (!request) return;
-
     const session = this.sessionManager.approveSession(requestId, [this.wallet.address]);
 
     const response: WakuMessage = {
       type: 'session_response',
-      sessionId: request.id,
+      sessionId: requestId,
       data: {
         approved: true,
         accounts: [this.wallet.address],
@@ -131,19 +127,16 @@ export class Wallet {
     };
 
     await this.wakuClient.publishMessage(response);
-    this.pendingRequests.delete(requestId);
+    this.sessionManager.delRequest(requestId);
     this.removeRequestFromUI(requestId);
 
     console.log('Session approved');
   }
 
   async rejectSession(requestId: string): Promise<void> {
-    const request = this.pendingRequests.get(requestId) as SessionRequest;
-    if (!request) return;
-
     const response: WakuMessage = {
       type: 'session_response',
-      sessionId: request.id,
+      sessionId: requestId,
       data: {
         approved: false,
         error: 'User rejected'
@@ -152,16 +145,14 @@ export class Wallet {
     };
 
     await this.wakuClient.publishMessage(response);
-    this.pendingRequests.delete(requestId);
+    this.sessionManager.delRequest(requestId);
     this.removeRequestFromUI(requestId);
 
     console.log('Session rejected');
   }
 
   async approveSign(requestId: string): Promise<void> {
-    const request = this.pendingRequests.get(requestId) as SignRequest;
-    if (!request) return;
-
+    const request = this.sessionManager.approveSign(requestId);
     try {
       const message = request.params[0];
       const signature = await this.wallet.signMessage(message);
@@ -178,7 +169,7 @@ export class Wallet {
       };
 
       await this.wakuClient.publishMessage(response);
-      this.pendingRequests.delete(requestId);
+      this.sessionManager.delRequest(requestId);
       this.removeRequestFromUI(requestId);
 
       console.log('Message signed:', signature);
@@ -189,9 +180,7 @@ export class Wallet {
   }
 
   async rejectSign(requestId: string): Promise<void> {
-    const request = this.pendingRequests.get(requestId) as SignRequest;
-    if (!request) return;
-
+    const request = this.sessionManager.rejectSign(requestId);
     const response: WakuMessage = {
       type: 'sign_response',
       sessionId: request.sessionId,
@@ -204,7 +193,7 @@ export class Wallet {
     };
 
     await this.wakuClient.publishMessage(response);
-    this.pendingRequests.delete(requestId);
+    this.sessionManager.delRequest(requestId);
     this.removeRequestFromUI(requestId);
 
     console.log('Sign request rejected');

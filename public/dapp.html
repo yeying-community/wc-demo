@@ -105,6 +105,8 @@
             try {
                 await dapp.connect();
                 document.getElementById('connection-uri-container').style.display = 'block';
+                document.getElementById('sign-btn').disabled = false;
+                document.getElementById('disconnect-btn').disabled = false;
             } catch (error) {
                 console.error('Connection failed:', error);
                 document.getElementById('status').textContent = 'Connection failed';

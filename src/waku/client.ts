@@ -38,9 +38,7 @@ export class WakuClient {
       },
     });
 
-    console.log(`Local peerId=${this.node.peerId}`)
-
-    console.log(`Node started=${this.node.isStarted()}, waiting for peers...`);
+    console.log(`Node=${this.node.peerId} started=${this.node.isStarted()}, waiting for peers...`);
     await this.node.waitForPeers([Protocols.LightPush, Protocols.Filter], 5000);
 
     console.log(`Node connected=${this.node.isConnected()}`)

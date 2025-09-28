@@ -7,7 +7,7 @@ export class DApp {
   private wakuClient: WakuClient;
   private sessionManager: SessionManager;
   private jwtManager: JWTManager;
-  private currentSession: string | null = null;
+  private currentSessionId: string | null = null;
 
   constructor() {
     this.wakuClient = new WakuClient();
@@ -29,7 +29,7 @@ export class DApp {
   private setupMessageHandlers(): void {
     this.wakuClient.onMessage('session_response', (message: WakuMessage) => {
       if (message.data.approved) {
-        this.currentSession = message.sessionId;
+        this.currentSessionId = message.data.session.id;
         console.log('Session approved:', message.data);
         this.onSessionApproved(message.data);
       } else {
@@ -73,20 +73,20 @@ export class DApp {
   }
 
   async signMessage(messageToSign: string): Promise<void> {
-    if (!this.currentSession) {
+    if (!this.currentSessionId) {
       throw new Error('No active session');
     }
 
     const signRequest: SignRequest = {
       id: crypto.randomUUID(),
-      sessionId: this.currentSession,
+      sessionId: this.currentSessionId,
       method: 'personal_sign',
       params: [messageToSign, this.getConnectedAddress()]
     };
 
     const message: WakuMessage = {
       type: 'sign_request',
-      sessionId: this.currentSession,
+      sessionId: this.currentSessionId,
       data: signRequest,
       timestamp: Date.now()
     };
@@ -111,7 +111,7 @@ export class DApp {
 
     // 生成 JWT token
     const address = sessionData.accounts[0];
-    const token = this.jwtManager.generateToken(address, this.currentSession!);
+    const token = this.jwtManager.generateToken(address, this.currentSessionId!);
     console.log('JWT Token generated:', token);
 
     // 更新 UI
@@ -129,7 +129,7 @@ export class DApp {
   }
 
   private getConnectedAddress(): string {
-    const session = this.sessionManager.getSession(this.currentSession!);
+    const session = this.sessionManager.getSession(this.currentSessionId!);
     return session?.accounts[0] || '';
   }
 
@@ -147,7 +147,7 @@ export class DApp {
   }
 
   async disconnect(): Promise<void> {
-    this.currentSession = null;
+    this.currentSessionId = null;
     console.log('Disconnected');
     this.updateUI('disconnected');
   }
