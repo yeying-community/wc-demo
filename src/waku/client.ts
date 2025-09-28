@@ -88,7 +88,9 @@ export class WakuClient {
 
     const result = await this.node.lightPush.send(encoder, {
       payload,
-      timestamp: new Date()
+      timestamp: new Date(),
+    },{
+      useLegacy: true,
     });
     console.log('Message published:', message.type, 'Success:', result.successes.length > 0, "error:", result.failures);
   }
