@@ -1,4 +1,4 @@
-import * as jso from 'jose';
+import * as jose from 'jose';
 export class JWTManager {
   private secret: Uint8Array;
 
