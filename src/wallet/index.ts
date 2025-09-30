@@ -1,19 +1,17 @@
 import { WakuClient } from '../waku/client';
-import { SessionManager } from '../walletconnect/session';
 import { WalletConnectCrypto } from '../walletconnect/crypto';
 import { JWTManager } from '../utils/jwt';
-import { WakuMessage, SessionRequest, SignRequest } from '../types';
+import { WakuMessage, SessionRequest, SignRequest, Session } from '../types';
 import { ethers } from 'ethers';
 
 export class Wallet {
   private wakuClient: WakuClient;
-  private sessionManager: SessionManager;
   private jwtManager: JWTManager;
   private wallet: ethers.Wallet;
+  private pendingRequests: Map<string, SessionRequest | SignRequest> = new Map();
 
   constructor() {
     this.wakuClient = new WakuClient();
-    this.sessionManager = new SessionManager();
     this.jwtManager = new JWTManager();
 
     // 创建或加载钱包
@@ -53,12 +51,12 @@ export class Wallet {
   }
 
   private handleSessionRequest(request: SessionRequest): void {
-    this.sessionManager.setRequest(request);
+    this.pendingRequests.set(request.id, request)
     this.displaySessionRequest(request);
   }
 
   private handleSignRequest(request: SignRequest): void {
-    this.sessionManager.setRequest(request);
+    this.pendingRequests.set(request.id, request);
     this.displaySignRequest(request);
   }
 
@@ -113,11 +111,34 @@ export class Wallet {
   }
 
   async approveSession(requestId: string): Promise<void> {
-    const session = this.sessionManager.approveSession(requestId, [this.wallet.address]);
+    const request = this.pendingRequests.get(requestId) as SessionRequest;
+    if (!request) {
+      throw new Error('Session request not found when approving session request.');
+    }
+
+    const accounts = [this.wallet.address]
+    // 钱包决定给那些权限
+    const session: Session = {
+      id: request.sessionId,
+      topic: request.topic,
+      accounts,
+      namespaces: {
+        eip155: {
+          chains: ['eip155:1', 'eip155:137'],
+          methods: ['personal_sign', 'eth_signTypedData_v4', 'eth_sendTransaction'],
+          events: ['accountsChanged', 'chainChanged'],
+          accounts: accounts.map(addr => `eip155:1:${addr}`)
+        }
+      },
+      metadata: request.metadata,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+      active: true
+    };
 
     const response: WakuMessage = {
       type: 'session_response',
-      sessionId: requestId,
+      sessionId: session.id,
       data: {
         approved: true,
         accounts: [this.wallet.address],
@@ -127,13 +148,18 @@ export class Wallet {
     };
 
     await this.wakuClient.publishMessage(response);
-    this.sessionManager.delRequest(requestId);
+    this.pendingRequests.delete(requestId)
     this.removeRequestFromUI(requestId);
 
     console.log('Session approved');
   }
 
   async rejectSession(requestId: string): Promise<void> {
+    const request = this.pendingRequests.get(requestId) as SessionRequest;
+    if (!request) {
+      throw new Error('Session request not found when rejecting session request.');
+    }
+
     const response: WakuMessage = {
       type: 'session_response',
       sessionId: requestId,
@@ -145,14 +171,18 @@ export class Wallet {
     };
 
     await this.wakuClient.publishMessage(response);
-    this.sessionManager.delRequest(requestId);
+    this.pendingRequests.delete(requestId)
     this.removeRequestFromUI(requestId);
 
     console.log('Session rejected');
   }
 
   async approveSign(requestId: string): Promise<void> {
-    const request = this.sessionManager.approveSign(requestId);
+    const request = this.pendingRequests.get(requestId) as SignRequest;
+    if (!request) {
+      throw new Error('Sign request not found when approving');
+    }
+
     try {
       const message = request.params[0];
       const signature = await this.wallet.signMessage(message);
@@ -169,7 +199,7 @@ export class Wallet {
       };
 
       await this.wakuClient.publishMessage(response);
-      this.sessionManager.delRequest(requestId);
+      this.pendingRequests.delete(requestId);
       this.removeRequestFromUI(requestId);
 
       console.log('Message signed:', signature);
@@ -180,7 +210,11 @@ export class Wallet {
   }
 
   async rejectSign(requestId: string): Promise<void> {
-    const request = this.sessionManager.rejectSign(requestId);
+    const request = this.pendingRequests.get(requestId) as SignRequest;
+    if (!request) {
+      throw new Error('Sign request not found when rejecting');
+    }
+
     const response: WakuMessage = {
       type: 'sign_response',
       sessionId: request.sessionId,
@@ -193,7 +227,7 @@ export class Wallet {
     };
 
     await this.wakuClient.publishMessage(response);
-    this.sessionManager.delRequest(requestId);
+    this.pendingRequests.delete(requestId);
     this.removeRequestFromUI(requestId);
 
     console.log('Sign request rejected');
@@ -203,6 +237,8 @@ export class Wallet {
     const requestElement = document.querySelector(`[data-request-id="${requestId}"]`);
     if (requestElement) {
       requestElement.remove();
+    } else {
+      console.log(`not found ui element for requestId=${requestId}`)
     }
   }
 

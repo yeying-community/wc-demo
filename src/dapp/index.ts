@@ -1,17 +1,15 @@
 import { WakuClient } from '../waku/client';
-import { SessionManager } from '../walletconnect/session';
 import { JWTManager } from '../utils/jwt';
-import { WakuMessage, SignRequest } from '../types';
+import { WakuMessage, SignRequest, AppMetadata, SessionRequest, Session } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
 export class DApp {
   private wakuClient: WakuClient;
-  private sessionManager: SessionManager;
   private jwtManager: JWTManager;
-  private currentSessionId: string | null = null;
+  private currentSession: Session | null = null;
 
   constructor() {
     this.wakuClient = new WakuClient();
-    this.sessionManager = new SessionManager();
     this.jwtManager = new JWTManager();
   }
 
@@ -29,9 +27,8 @@ export class DApp {
   private setupMessageHandlers(): void {
     this.wakuClient.onMessage('session_response', (message: WakuMessage) => {
       if (message.data.approved) {
-        this.currentSessionId = message.data.session.id;
         console.log('Session approved:', message.data);
-        this.onSessionApproved(message.data);
+        this.onSessionApproved(message.data.session as Session, message.data.accounts);
       } else {
         console.log('Session rejected');
         this.onSessionRejected(() => { });
@@ -50,8 +47,42 @@ export class DApp {
     console.log('Session rejected callback registered');
   }
 
+  private generateTopic(): string {
+    return Array.from(crypto.getRandomValues(new Uint8Array(32)))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  // 发起创建回话请求，向钱包索要权限
+  createSessionRequest(metadata: AppMetadata): SessionRequest {
+    const id = uuidv4();
+    const sessionId = uuidv4();
+    const topic = this.generateTopic();
+
+    const request: SessionRequest = {
+      id,
+      sessionId: sessionId,
+      topic,
+      method: 'wc_sessionPropose',
+      params: {
+        requiredNamespaces: {
+          eip155: {
+            chains: ['eip155:1', 'eip155:137'], // Ethereum, Polygon
+            methods: ['personal_sign', 'eth_signTypedData_v4', 'eth_sendTransaction'],
+            events: ['accountsChanged', 'chainChanged']
+          }
+        }
+      },
+      metadata
+    };
+
+    return request;
+  }
+
+  // web3应用发起连接请求
   async connect(): Promise<void> {
-    const request = this.sessionManager.createSessionRequest({
+    // 发起创建和钱包之间的会话
+    const request = this.createSessionRequest({
       name: 'Test DApp',
       description: 'A test DApp for WalletConnect',
       url: 'https://test-dapp.com',
@@ -60,7 +91,7 @@ export class DApp {
 
     const message: WakuMessage = {
       type: 'session_request',
-      sessionId: request.id,
+      sessionId: request.sessionId,
       data: request,
       timestamp: Date.now()
     };
@@ -73,20 +104,20 @@ export class DApp {
   }
 
   async signMessage(messageToSign: string): Promise<void> {
-    if (!this.currentSessionId) {
+    if (!this.currentSession) {
       throw new Error('No active session');
     }
 
     const signRequest: SignRequest = {
       id: crypto.randomUUID(),
-      sessionId: this.currentSessionId,
+      sessionId: this.currentSession.id,
       method: 'personal_sign',
-      params: [messageToSign, this.getConnectedAddress()]
+      params: [messageToSign, this.currentSession.accounts]
     };
 
     const message: WakuMessage = {
       type: 'sign_request',
-      sessionId: this.currentSessionId,
+      sessionId: this.currentSession.id,
       data: signRequest,
       timestamp: Date.now()
     };
@@ -106,12 +137,12 @@ export class DApp {
     }
   }
 
-  private onSessionApproved(sessionData: any): void {
-    console.log('Session approved with accounts:', sessionData.accounts);
-
+  private onSessionApproved(session: Session, accounts: string[]): void {
+    console.log('Session approved with accounts:', accounts);
+    this.currentSession = session;
     // 生成 JWT token
-    const address = sessionData.accounts[0];
-    const token = this.jwtManager.generateToken(address, this.currentSessionId!);
+    const address = accounts[0];
+    const token = this.jwtManager.generateToken(address, session.id!);
     console.log('JWT Token generated:', token);
 
     // 更新 UI
@@ -128,11 +159,6 @@ export class DApp {
     }
   }
 
-  private getConnectedAddress(): string {
-    const session = this.sessionManager.getSession(this.currentSessionId!);
-    return session?.accounts[0] || '';
-  }
-
   private updateUI(status: string, data?: any): void {
     const statusElement = document.getElementById('status');
     const dataElement = document.getElementById('data');
@@ -147,7 +173,7 @@ export class DApp {
   }
 
   async disconnect(): Promise<void> {
-    this.currentSessionId = null;
+    this.currentSession = null;
     console.log('Disconnected');
     this.updateUI('disconnected');
   }

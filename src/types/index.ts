@@ -1,5 +1,6 @@
 export interface SessionRequest {
   id: string;
+  sessionId: string;
   topic: string;
   method: string;
   params: {
