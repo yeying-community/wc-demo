@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WalletConnect Waku DApp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        .protected-section {
+            background: #f0f8ff;
+            border: 1px solid #b0d4f1;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .status.success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>WalletConnect Waku DApp</h1>
+    <div class="container">
+        <h2>Wallet Connection</h2>
+        <div class="connection-info">
+            <p><strong>Status:</strong> <span id="connection-status">Disconnected</span></p>
+            <p><strong>Connected Wallet:</strong> <span id="connected-wallet">None</span></p>
+        </div>
+        <div class="input-group">
+            <label for="wallet-address">Wallet Address:</label>
+            <input type="text" id="wallet-address" placeholder="Enter wallet address (e.g., wallet_123)" />
+        </div>
+        <button id="connect-button">Connect Wallet</button>
+        <button id="disconnect-button" style="display: none;">Disconnect</button>
+    </div>
+    <div class="container">
+        <h2>Server Authentication</h2>
+        <div class="connection-info">
+            <p><strong>Server Status:</strong> <span id="server-auth-status">Not authenticated with server</span></p>
+        </div>
+        <button id="server-auth-button">Login to Server</button>
+    </div>
+    <div id="protected-section" class="protected-section" style="display: none;">
+        <h2>Protected API Calls</h2>
+        <p>These features require server authentication:</p>
+        
+        <div style="margin: 15px 0;">
+            <button id="get-user-data">Get User Data</button>
+            <div id="user-data-result"></div>
+        </div>
+        
+        <div style="margin: 15px 0;">
+            <button id="update-preferences">Update Preferences</button>
+        </div>
+    </div>
+    <div class="container">
+        <h2>Sign Message</h2>
+        <input type="text" id="message-input" placeholder="Enter message to sign" value="Hello from DApp!">
+        <button id="sign-button">Sign Message</button>
+        <div id="signature-result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Status</h2>
+        <div id="status">Ready to connect</div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
+

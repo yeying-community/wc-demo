@@ -1,54 +1,17 @@
 {
-  "name": "wallet",
+  "name": "walletconnect-waku-workspace",
   "version": "1.0.0",
-  "description": "WalletConnect v2 implementation using go-waku",
-  "main": "dist/index.js",
+  "description": "WalletConnect implementation using Waku network",
+  "private": true,
   "scripts": {
-    "build": "webpack --mode production",
-    "dev": "webpack serve --mode development --open",
-    "start": "node server.js",
-    "clean": "rm -rf dist",
-    "test": "echo \"No tests specified\" && exit 0",
-    "lint": "eslint src --ext .ts",
-    "type-check": "tsc --noEmit"
+    "install-all": "cd shared && npm install && npm run build && cd ../dapp && npm install && cd ../wallet && npm install",
+    "build-all": "cd shared && npm run build && cd ../dapp && npm run build && cd ../wallet && npm run build",
+    "dev-dapp": "cd dapp && npm run dev",
+    "dev-wallet": "cd wallet && npm run dev"
   },
-  "dependencies": {
-    "@chainsafe/libp2p-yamux": "^7.0.4",
-    "@waku/sdk": "^0.0.35",
-    "ethers": "^6.8.1",
-    "express": "^4.18.2",
-    "jose": "^6.1.0",
-    "uuid": "^9.0.1",
-    "ws": "^8.14.2"
-  },
-  "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.3",
-    "@types/node": "^20.8.0",
-    "@types/uuid": "^9.0.5",
-    "@types/ws": "^8.5.6",
-    "browserify-zlib": "^0.2.0",
-    "buffer": "^6.0.3",
-    "console-browserify": "^1.2.0",
-    "constants-browserify": "^1.0.0",
-    "crypto-browserify": "^3.12.1",
-    "domain-browser": "^5.7.0",
-    "html-webpack-plugin": "^5.5.3",
-    "https-browserify": "^1.0.0",
-    "os-browserify": "^0.3.0",
-    "path-browserify": "^1.0.1",
-    "process": "^0.11.10",
-    "querystring-es3": "^0.2.1",
-    "stream-browserify": "^3.0.0",
-    "stream-http": "^3.2.0",
-    "timers-browserify": "^2.0.12",
-    "ts-loader": "^9.4.4",
-    "ts-node": "^10.9.2",
-    "tty-browserify": "^0.0.1",
-    "typescript": "^5.9.2",
-    "util": "^0.12.5",
-    "vm-browserify": "^1.1.2",
-    "webpack": "^5.88.2",
-    "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^4.15.1"
-  }
+  "workspaces": [
+    "shared",
+    "dapp",
+    "wallet"
+  ]
 }

@@ -1,0 +1,22 @@
+{
+  "name": "walletconnect-waku-sdk",
+  "version": "1.0.0",
+  "description": "Shared SDK for WalletConnect over Waku",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@chainsafe/libp2p-yamux": "^7.0.4",
+    "@waku/sdk": "^0.0.35",
+    "ethers": "^6.8.1",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.3"
+  }
+}
