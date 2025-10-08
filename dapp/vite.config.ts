@@ -33,7 +33,7 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      //external: (id) => id.includes('@libp2p/utils/multiaddr/is-globalThis-unicast'),
+      external: (id) => id.includes('@libp2p/utils/multiaddr/is-globalThis-unicast'),
       output: {
         manualChunks: {
           'crypto-libs': ['crypto-browserify', 'buffer'],
