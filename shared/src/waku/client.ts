@@ -103,7 +103,7 @@ export class WakuClient {
         bootstrapPeers: wakuNodes,
         numPeersToUse: 1,
         libp2p: {
-          streamMuxers: [yamux()],
+          // streamMuxers: [yamux()],
           filterMultiaddrs: false,
           hideWebSocketInfo: true,
           connectionManager: {
