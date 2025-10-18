@@ -1,115 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WalletConnect Waku DApp</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .container {
-            background: #f5f5f5;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        #status {
-            margin: 10px 0;
-            padding: 10px;
-            background: #e9ecef;
-            border-radius: 4px;
-        }
-        .protected-section {
-            background: #f0f8ff;
-            border: 1px solid #b0d4f1;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        .status.success {
-            color: #28a745;
-            font-weight: bold;
-        }
-        pre {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 4px;
-            overflow-x: auto;
-            font-size: 12px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WalletConnect Waku DApp</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <h1>WalletConnect Waku DApp</h1>
-    <div class="container">
-        <h2>Wallet Connection</h2>
-        <div class="connection-info">
-            <p><strong>Status:</strong> <span id="connection-status">Disconnected</span></p>
-            <p><strong>Connected Wallet:</strong> <span id="connected-wallet">None</span></p>
-        </div>
-        <div class="input-group">
-            <label for="wallet-address">Wallet Address:</label>
-            <input type="text" id="wallet-address" placeholder="Enter wallet address (e.g., wallet_123)" />
-        </div>
-        <button id="connect-button">Connect Wallet</button>
-        <button id="disconnect-button" style="display: none;">Disconnect</button>
-    </div>
-    <div class="container">
-        <h2>Server Authentication</h2>
-        <div class="connection-info">
-            <p><strong>Server Status:</strong> <span id="server-auth-status">Not authenticated with server</span></p>
-        </div>
-        <button id="server-auth-button">Login to Server</button>
-    </div>
-    <div id="protected-section" class="protected-section" style="display: none;">
-        <h2>Protected API Calls</h2>
-        <p>These features require server authentication:</p>
-        
-        <div style="margin: 15px 0;">
-            <button id="get-user-data">Get User Data</button>
-            <div id="user-data-result"></div>
-        </div>
-        
-        <div style="margin: 15px 0;">
-            <button id="update-preferences">Update Preferences</button>
-        </div>
-    </div>
-    <div class="container">
-        <h2>Sign Message</h2>
-        <input type="text" id="message-input" placeholder="Enter message to sign" value="Hello from DApp!">
-        <button id="sign-button">Sign Message</button>
-        <div id="signature-result"></div>
+  <div class="container">
+    <header>
+      <h1>🔗 WalletConnect Waku DApp</h1>
+      <p class="subtitle">Connect your wallet using Waku network</p>
+    </header>
+
+    <!-- 状态显示 -->
+    <div class="status-section">
+      <div id="status" class="status">Ready to connect</div>
     </div>
 
-    <div class="container">
-        <h2>Status</h2>
-        <div id="status">Ready to connect</div>
+    <!-- 连接部分 -->
+    <section class="card">
+      <h2>Connection</h2>
+      <div class="button-group">
+        <button id="connect-button" class="btn btn-primary">Connect Wallet</button>
+        <button id="disconnect-button" class="btn btn-secondary" disabled>Disconnect</button>
+        <button id="ping-button" class="btn btn-secondary">Ping</button>
+      </div>
+
+      <!-- 账户信息 -->
+      <div id="account-info" class="account-info" style="display: none;">
+        <!-- 动态填充 -->
+      </div>
+
+      <!-- QR 码显示 -->
+      <div id="qr-container" class="qr-container" style="display: none;">
+        <h3>Scan QR Code</h3>
+        <canvas id="qr-code"></canvas>
+        <div class="uri-section">
+          <p class="uri-label">Connection URI:</p>
+          <p id="uri-text" class="uri-text"></p>
+          <button id="copy-uri-button" class="btn btn-small">Copy URI</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 操作部分 -->
+    <div id="actions-section" style="display: none;">
+      <!-- 发送交易 -->
+      <section class="card">
+        <h2>Send Transaction</h2>
+        <div class="form-group">
+          <label for="to-address">Recipient Address:</label>
+          <input 
+            type="text" 
+            id="to-address" 
+            placeholder="0x..."
+            class="input"
+          />
+        </div>
+        <div class="form-group">
+          <label for="amount">Amount (ETH):</label>
+          <input 
+            type="number" 
+            id="amount" 
+            placeholder="0.01"
+            step="0.001"
+            class="input"
+          />
+        </div>
+        <button id="send-tx-button" class="btn btn-primary">Send Transaction</button>
+      </section>
+
+      <!-- 签名消息 -->
+      <section class="card">
+        <h2>Sign Message</h2>
+        <div class="form-group">
+          <label for="message-input">Message:</label>
+          <textarea 
+            id="message-input" 
+            placeholder="Enter message to sign..."
+            class="textarea"
+            rows="3"
+          >Hello, World!</textarea>
+        </div>
+        <button id="sign-button" class="btn btn-primary">Sign Message</button>
+        <div id="sign-result" class="result-box" style="display: none;">
+          <!-- 动态填充 -->
+        </div>
+      </section>
+
+      <!-- 签名类型化数据 -->
+      <section class="card">
+        <h2>Sign Typed Data (EIP-712)</h2>
+        <p class="description">Sign structured data according to EIP-712 standard</p>
+        <button id="sign-typed-data-button" class="btn btn-primary">Sign Typed Data</button>
+        <div id="typed-data-result" class="result-box" style="display: none;">
+          <!-- 动态填充 -->
+        </div>
+      </section>
+
+      <!-- 切换链 -->
+      <section class="card">
+        <h2>Switch Chain</h2>
+        <div class="form-group">
+          <label for="chain-select">Select Chain:</label>
+          <select id="chain-select" class="select">
+            <option value="0x1">Ethereum Mainnet (0x1)</option>
+            <option value="0x89">Polygon (0x89)</option>
+            <option value="0x38">BSC (0x38)</option>
+            <option value="0xa4b1">Arbitrum (0xa4b1)</option>
+            <option value="0xa">Optimism (0xa)</option>
+          </select>
+        </div>
+        <button id="switch-chain-button" class="btn btn-primary">Switch Chain</button>
+      </section>
+
+      <!-- 会话信息 -->
+      <section class="card">
+        <h2>Session Information</h2>
+        <button id="get-session-button" class="btn btn-secondary">Get Session Info</button>
+        <div id="session-info" class="result-box" style="display: none;">
+          <!-- 动态填充 -->
+        </div>
+      </section>
     </div>
-    <script type="module" src="/src/main.ts"></script>
+
+    <!-- 页脚 -->
+    <footer>
+      <p>Powered by WalletConnect & Waku Network</p>
+    </footer>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
-

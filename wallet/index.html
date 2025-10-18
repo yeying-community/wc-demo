@@ -1,238 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WalletConnect Waku Wallet</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .container {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border: 1px solid #dee2e6;
-        }
-        .wallet-info {
-            background: #e3f2fd;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-        .request-item, .session-item {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-        }
-        .request-actions {
-            margin-top: 10px;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        button.danger {
-            background: #dc3545;
-        }
-        button.danger:hover {
-            background: #c82333;
-        }
-        button.success {
-            background: #28a745;
-        }
-        button.success:hover {
-            background: #218838;
-        }
-        input, textarea {
-            width: 100%;
-            padding: 8px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        textarea {
-            height: 100px;
-            resize: vertical;
-        }
-        .address {
-            font-family: monospace;
-            background: #f8f9fa;
-            padding: 5px;
-            border-radius: 4px;
-            word-break: break-all;
-        }
-        .empty-state {
-            text-align: center;
-            color: #6c757d;
-            font-style: italic;
-            padding: 20px;
-        }
-        .auth-item {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
-            background: #f9f9f9;
-        }
-        .auth-item.approved {
-            border-left: 4px solid #28a745;
-        }
-        .auth-item.rejected {
-            border-left: 4px solid #dc3545;
-        }
-        .auth-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .auth-type {
-            font-weight: bold;
-            color: #333;
-        }
-        .auth-status {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .auth-status.approved {
-            background: #d4edda;
-            color: #155724;
-        }
-        .auth-status.rejected {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .auth-details p {
-            margin: 5px 0;
-            font-size: 14px;
-            color: #666;
-        }
-        .message-preview {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 4px;
-            padding: 10px;
-            margin: 15px 0;
-        }
-        .message-preview pre {
-            margin: 5px 0 0 0;
-            font-size: 12px;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .tabs {
-            display: flex;
-            border-bottom: 2px solid #e9ecef;
-            margin-bottom: 20px;
-        }
-        .tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            border: none;
-            background: none;
-            font-size: 16px;
-            color: #666;
-            border-bottom: 2px solid transparent;
-        }
-        .tab.active {
-            color: #007bff;
-            border-bottom-color: #007bff;
-        }
-        .tab:hover {
-            color: #007bff;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Waku Wallet</title>
+  <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
-    <h1>WalletConnect Waku Wallet</h1>
-    
-    <div class="container">
-        <h2>Wallet Status</h2>
-        <div class="wallet-info">
-            <p><strong>Address:</strong> <span id="wallet-address">Loading...</span></p>
-            <p><strong>Status:</strong> <span id="wallet-status">Initializing...</span></p>
-            <p><strong>Connected DApps:</strong> <span id="connected-dapps">0</span></p>
-        </div>
-    </div>
-    <!-- 添加标签页导航 -->
-    <div class="container">
-        <div class="tabs">
-            <button class="tab active" data-tab="connections">Connections</button>
-            <button class="tab" data-tab="history">Auth History</button>
-            <button class="tab" data-tab="settings">Settings</button>
-        </div>
+  <div class="container">
+    <!-- 头部 -->
+    <header class="header">
+      <h1>🔐 Waku Wallet</h1>
+      <p class="subtitle">Decentralized Wallet using Waku Network</p>
+    </header>
 
-        <!-- 连接管理标签页 -->
-        <div id="connections" class="tab-content active">
-            <h3>Active Connections</h3>
-            <div id="connections-list">
-                <p>No active connections</p>
-            </div>
-            <div id="requests"></div>
+    <!-- 钱包信息卡片 -->
+    <div class="wallet-card">
+      <div class="wallet-info">
+        <div class="info-row">
+          <span class="label">Address:</span>
+          <div class="address-container">
+            <code id="wallet-address" class="address">Loading...</code>
+            <button id="copy-address" class="icon-btn" title="Copy address">
+              📋
+            </button>
+          </div>
         </div>
-        <div id="history" class="tab-content">
-            <h3>Authentication History</h3>
-            <div id="auth-history">
-                <p>No authentication history</p>
-            </div>
+        <div class="info-row">
+          <span class="label">Status:</span>
+          <span id="wallet-status" class="status">Initializing...</span>
         </div>
-
-        <!-- 设置标签页 -->
-        <div id="settings" class="tab-content">
-            <h3>Wallet Settings</h3>
-            <div class="setting-item">
-                <label>
-                    <input type="checkbox" id="auto-approve-known"> 
-                    Auto-approve requests from known DApps
-                </label>
-            </div>
-            <div class="setting-item">
-                <label>
-                    <input type="checkbox" id="show-notifications" checked> 
-                    Show notifications
-                </label>
-            </div>
-            <div class="setting-item">
-                <button id="clear-history">Clear Authentication History</button>
-            </div>
-            <div class="setting-item">
-                <button id="export-wallet">Export Wallet Data</button>
-            </div>
+        <div class="info-row">
+          <span class="label">Connected DApps:</span>
+          <span id="connected-dapps" class="badge">0</span>
         </div>
+      </div>
     </div>
 
-    <div class="container">
-        <h2>Status</h2>
-        <div id="status">Initializing wallet...</div>
+    <!-- 标签页导航 -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="requests">
+        📬 Requests
+      </button>
+      <button class="tab-btn" data-tab="connections">
+        🔗 Connections
+      </button>
+      <button class="tab-btn" data-tab="history">
+        📜 History
+      </button>
+      <button class="tab-btn" data-tab="settings">
+        ⚙️ Settings
+      </button>
     </div>
-    <!-- 通知容器 -->
-    <div id="notifications"></div>
 
-    <script type="module" src="/src/main.ts"></script>
+    <!-- 标签页内容 -->
+    <div class="tab-contents">
+      <!-- 请求标签页 -->
+      <div id="requests-tab" class="tab-content active">
+        <div class="tab-header">
+          <h2>Pending Requests</h2>
+          <p class="tab-description">Review and approve/reject connection and transaction requests</p>
+        </div>
+        <div id="requests" class="requests-container">
+          <p class="empty-state">No pending requests</p>
+        </div>
+      </div>
+
+      <!-- 连接标签页 -->
+      <div id="connections-tab" class="tab-content">
+        <div class="tab-header">
+          <h2>Active Connections</h2>
+          <p class="tab-description">Manage your connected DApps</p>
+          <button id="refresh-connections" class="btn secondary">
+            🔄 Refresh
+          </button>
+        </div>
+        <div id="connections-list" class="connections-container">
+          <p class="empty-state">No active connections</p>
+        </div>
+      </div>
+
+      <!-- 历史标签页 -->
+      <div id="history-tab" class="tab-content">
+        <div class="tab-header">
+          <h2>Authentication History</h2>
+          <p class="tab-description">View your past authentication activities</p>
+          <div class="header-actions">
+            <button id="clear-history" class="btn danger">
+              🗑️ Clear History
+            </button>
+            <button id="export-data" class="btn secondary">
+              💾 Export Data
+            </button>
+          </div>
+        </div>
+        <div id="auth-history" class="history-container">
+          <p class="empty-state">No authentication history</p>
+        </div>
+      </div>
+
+      <!-- 设置标签页 -->
+      <div id="settings-tab" class="tab-content">
+        <div class="tab-header">
+          <h2>Settings</h2>
+          <p class="tab-description">Configure your wallet preferences</p>
+        </div>
+        <form id="settings-form" class="settings-form">
+          <div class="setting-group">
+            <h3>Security</h3>
+            <div class="setting-item">
+              <label class="checkbox-label">
+                <input type="checkbox" id="auto-approve">
+                <span>Auto-approve known DApps</span>
+              </label>
+              <p class="setting-description">
+                Automatically approve session requests from previously connected DApps
+              </p>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <h3>Notifications</h3>
+            <div class="setting-item">
+              <label class="checkbox-label">
+                <input type="checkbox" id="show-notifications" checked>
+                <span>Show notifications</span>
+              </label>
+              <p class="setting-description">
+                Display notifications for new requests and events
+              </p>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <h3>Advanced</h3>
+            <div class="setting-item">
+              <label>Waku Bootstrap Peers</label>
+              <p class="setting-description">
+                Current: <code id="bootstrap-peers">Default peers</code>
+              </p>
+            </div>
+          </div>
+
+          <button type="submit" class="btn primary">
+            💾 Save Settings
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 通知容器 -->
+  <div id="notifications" class="notification-container"></div>
+
+  <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
