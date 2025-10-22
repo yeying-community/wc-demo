@@ -9,10 +9,12 @@
   },
   "dependencies": {
     "ethers": "^6.8.1",
+    "qrcode": "^1.5.4",
     "walletconnect-waku-sdk": "file:../shared"
   },
   "devDependencies": {
     "@rollup/plugin-inject": "^5.0.5",
+    "@types/qrcode": "^1.5.5",
     "terser": "^5.44.0",
     "typescript": "^5.0.0",
     "vite": "^4.4.5",

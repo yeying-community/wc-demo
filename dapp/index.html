@@ -1,115 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WalletConnect Waku DApp</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .container {
-            background: #f5f5f5;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        #status {
-            margin: 10px 0;
-            padding: 10px;
-            background: #e9ecef;
-            border-radius: 4px;
-        }
-        .protected-section {
-            background: #f0f8ff;
-            border: 1px solid #b0d4f1;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        .status.success {
-            color: #28a745;
-            font-weight: bold;
-        }
-        pre {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 4px;
-            overflow-x: auto;
-            font-size: 12px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WalletConnect Waku DApp</title>
 </head>
 <body>
-    <h1>WalletConnect Waku DApp</h1>
-    <div class="container">
-        <h2>Wallet Connection</h2>
-        <div class="connection-info">
-            <p><strong>Status:</strong> <span id="connection-status">Disconnected</span></p>
-            <p><strong>Connected Wallet:</strong> <span id="connected-wallet">None</span></p>
-        </div>
-        <div class="input-group">
-            <label for="wallet-address">Wallet Address:</label>
-            <input type="text" id="wallet-address" placeholder="Enter wallet address (e.g., wallet_123)" />
-        </div>
-        <button id="connect-button">Connect Wallet</button>
-        <button id="disconnect-button" style="display: none;">Disconnect</button>
-    </div>
-    <div class="container">
-        <h2>Server Authentication</h2>
-        <div class="connection-info">
-            <p><strong>Server Status:</strong> <span id="server-auth-status">Not authenticated with server</span></p>
-        </div>
-        <button id="server-auth-button">Login to Server</button>
-    </div>
-    <div id="protected-section" class="protected-section" style="display: none;">
-        <h2>Protected API Calls</h2>
-        <p>These features require server authentication:</p>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <h1>🔗 WalletConnect Waku DApp</h1>
+      <p class="subtitle">Connect your wallet using WalletConnect over Waku Network</p>
+    </header>
+
+    <!-- Status Section -->
+    <section class="status-section">
+      <div id="status" class="status">Initializing...</div>
+    </section>
+
+    <!-- Connection Section -->
+    <section class="card">
+      <h2>📱 Connection</h2>
+      <p class="description">Connect your wallet to interact with the DApp</p>
+      
+      <div class="button-group">
+        <button id="connect-button" class="btn btn-primary">Connect</button>
+        <button id="disconnect-button" class="btn btn-secondary" disabled>Disconnect</button>
+        <button id="ping-button" class="btn btn-secondary">Ping</button>
+        <button id="refresh-status-button" class="btn btn-secondary btn-small">Refresh</button>
+      </div>
+
+      <!-- QR Code Container -->
+      <div id="qr-container" class="qr-container" style="display: none;">
+        <h3>Scan QR Code</h3>
+        <canvas id="qr-code"></canvas>
         
-        <div style="margin: 15px 0;">
-            <button id="get-user-data">Get User Data</button>
-            <div id="user-data-result"></div>
+        <div class="uri-section">
+          <p class="uri-label">Connection URI:</p>
+          <div id="uri-text" class="uri-text"></div>
+          <button id="copy-uri-button" class="btn btn-secondary btn-small">Copy URI</button>
         </div>
+      </div>
+
+      <!-- Account Info -->
+      <div id="account-info" class="account-info" style="display: none;"></div>
+    </section>
+
+    <!-- Authentication Section (新增) -->
+    <section class="card">
+      <h2>🔐 Authentication</h2>
+      <p class="description">Login with your wallet to access protected features</p>
+      
+      <div class="button-group">
+        <button id="login-button" class="btn btn-primary">Login</button>
+        <button id="logout-button" class="btn btn-secondary">Logout</button>
+        <button id="verify-token-button" class="btn btn-secondary btn-small">Verify Token</button>
+        <button id="refresh-auth-button" class="btn btn-secondary btn-small">Refresh</button>
+      </div>
+
+      <!-- Authentication Info -->
+      <div id="auth-info" class="account-info" style="display: none;"></div>
+      
+      <!-- Auth Status Display -->
+      <div id="auth-status-display" class="result-box" style="display: none;"></div>
+    </section>
+
+    <!-- Protected Features Section (新增) -->
+    <div id="protected-section" style="display: none;">
+      <section class="card">
+        <h2>🛡️ Protected Features</h2>
+        <p class="description">These features require authentication</p>
+
+        <div class="button-group">
+          <button id="get-profile-button" class="btn btn-primary">Get User Profile</button>
+          <button id="call-protected-api-button" class="btn btn-secondary">Call Protected API</button>
+        </div>
+
+        <!-- Profile Info -->
+        <div id="profile-info" class="result-box" style="display: none;"></div>
         
-        <div style="margin: 15px 0;">
-            <button id="update-preferences">Update Preferences</button>
-        </div>
-    </div>
-    <div class="container">
-        <h2>Sign Message</h2>
-        <input type="text" id="message-input" placeholder="Enter message to sign" value="Hello from DApp!">
-        <button id="sign-button">Sign Message</button>
-        <div id="signature-result"></div>
+        <!-- API Result -->
+        <div id="api-result" class="result-box" style="display: none;"></div>
+      </section>
     </div>
 
-    <div class="container">
-        <h2>Status</h2>
-        <div id="status">Ready to connect</div>
+    <!-- Actions Section -->
+    <div id="actions-section" style="display: none;">
+      
+      <!-- Send Transaction -->
+      <section class="card">
+        <h2>💸 Send Transaction</h2>
+        <p class="description">Send ETH to another address</p>
+        
+        <div class="form-group">
+          <label for="to-address">Recipient Address:</label>
+          <input 
+            type="text" 
+            id="to-address" 
+            class="input" 
+            placeholder="0x..."
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="amount">Amount (ETH):</label>
+          <input 
+            type="number" 
+            id="amount" 
+            class="input" 
+            placeholder="0.01"
+            step="0.001"
+            min="0"
+          />
+        </div>
+        
+        <button id="send-tx-button" class="btn btn-primary">Send Transaction</button>
+      </section>
+
+      <!-- Sign Message -->
+      <section class="card">
+        <h2>✍️ Sign Message</h2>
+        <p class="description">Sign a message with your wallet</p>
+        
+        <div class="form-group">
+          <label for="message-input">Message:</label>
+          <textarea 
+            id="message-input" 
+            class="textarea" 
+            placeholder="Enter message to sign..."
+          ></textarea>
+        </div>
+
+        <button id="sign-button" class="btn btn-primary">Sign Message</button>
+        
+        <div id="sign-result" class="result-box" style="display: none;"></div>
+      </section>
+
+      <!-- Sign Typed Data -->
+      <section class="card">
+        <h2>📝 Sign Typed Data (EIP-712)</h2>
+        <p class="description">Sign structured data with your wallet</p>
+        
+        <button id="sign-typed-data-button" class="btn btn-primary">Sign Sample Typed Data</button>
+
+        <div id="typed-data-result" class="result-box" style="display: none;"></div>
+      </section>
+
+      <!-- Chain Management -->
+      <section class="card">
+        <h2>⛓️ Chain Management</h2>
+        <p class="description">Switch or add blockchain networks</p>
+        
+        <div class="form-group">
+          <label for="chain-select">Select Chain:</label>
+          <select id="chain-select" class="select">
+            <option value="">-- Select Chain --</option>
+            <option value="0x1">Ethereum Mainnet</option>
+            <option value="0x89">Polygon</option>
+            <option value="0x38">BSC</option>
+            <option value="0xa4b1">Arbitrum</option>
+            <option value="0xa">Optimism</option>
+          </select>
+        </div>
+        
+        <div class="button-group">
+          <button id="switch-chain-button" class="btn btn-primary">Switch Chain</button>
+          <button id="add-chain-button" class="btn btn-secondary">Add Polygon Mumbai</button>
+        </div>
+      </section>
+
+      <!-- Session Info -->
+      <section class="card">
+        <h2>ℹ️ Session Information</h2>
+        <p class="description">View current session and account details</p>
+        
+        <div class="button-group">
+          <button id="get-session-button" class="btn btn-primary">Get Session Info</button>
+          <button id="get-accounts-button" class="btn btn-secondary">Get Accounts Info</button>
+        </div>
+        
+        <div id="session-info" class="result-box" style="display: none;"></div>
+        <div id="accounts-info" class="result-box" style="display: none;"></div>
+      </section>
+
     </div>
-    <script type="module" src="/src/main.ts"></script>
+
+    <!-- Footer -->
+    <footer>
+      <p>Built with WalletConnect SDK over Waku Network</p>
+      <p>
+        <a href="https://walletconnect.com" target="_blank">WalletConnect</a> | 
+        <a href="https://waku.org" target="_blank">Waku</a>
+      </p>
+    </footer>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
-
