@@ -4,8 +4,8 @@
   "description": "WalletConnect implementation using Waku network",
   "private": true,
   "scripts": {
-    "install-all": "cd shared && npm install && npm run build && cd ../dapp && npm install && cd ../wallet && npm install",
-    "build-all": "cd shared && npm run build && cd ../dapp && npm run build && cd ../wallet && npm run build",
+    "install-all": "cd shared && npm install && npm run build && cd ../dapp && npm install && cd ../wallet && npm install && cd ../server && npm install",
+    "build-all": "cd shared && npm run build && cd ../dapp && npm run build && cd ../wallet && npm run build && cd ../server && npm install",
     "dev-dapp": "cd dapp && npm run dev",
     "dev-wallet": "cd wallet && npm run dev"
   },

@@ -12,6 +12,9 @@ This project demonstrates a WalletConnect-like protocol implementation using Wak
 
 1. Install dependencies for all projects:
 ```bash
+# Install all dependencies
+npm run install-all
+
 # Install SDK dependencies
 cd shared
 npm install
@@ -24,3 +27,6 @@ npm install
 # Install Wallet dependencies
 cd ../wallet
 npm install
+
+2. Build all projects
+npm run build-all
